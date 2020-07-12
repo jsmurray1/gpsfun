@@ -30,14 +30,14 @@ class track(object):
             return {
                 "min_elevation": self.min_elevation,
                 "max_elevation": self.max_elevation,
-                # "avg_elevation": self.avg_elevation,
-                # "ascent": self.ascent,
-                # "descent": self.descent,
+                "avg_elevation": self.avg_elevation,
+                "ascent": self.ascent,
+                "descent": self.descent,
             }
         else:
             return None
 
-    def calc_moving_time(self, method="simple", min_movement=0.05):
+    def _calc_moving_time(self, method="simple", min_movement=0.05):
         """
         simple: requires a minimum distance value and if the distance moved in 1 sec is less then this, it is not
         counted as moving. The default os 0.05meters is .1 mph, this is assuming time between points is 1 second, which
@@ -45,8 +45,11 @@ class track(object):
         """
         if method == "simple":
             self.df["moving_time_between"] = self.df["time_between"]
-            self.df.loc[
-                self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
+            if 'distance_between' in self.df.columns:
+                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
+            else:
+                self.distance()
+                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
             return self.df["moving_time_between"].sum()
 
     def time(self):
@@ -61,7 +64,7 @@ class track(object):
         self.df["time_between"] = self.df["Date_Time"].diff()
         self.elapsed_duration = self.end_time - self.start_time
         self.activity_time = self.df["time_between"].sum()
-        self.moving_time = self.calc_moving_time(method="simple", min_movement=0.05)
+        self.moving_time = self._calc_moving_time(method="simple", min_movement=0.05)
         return {
             "start_time": self.start_time,
             "end_time": self.end_time,
@@ -80,7 +83,7 @@ class track(object):
         self.df["distance_between"] = self.df.apply(
             lambda x: sqrt(
                 (haversine((x["Latitude"], x["Longitude"]),
-                           (x["diff_Latitude"], x["diff_Longitude"]),unit="m",)** 2
+                           (x["shift_Latitude"], x["shift_Longitude"]),unit="m",)** 2
                  + x["altitude_change"] ** 2)),axis=1)
         self.df.drop(['shift_Longitude', 'shift_Latitude'], axis=1)
         self.total_distance = self.df["distance_between"].sum()
@@ -132,6 +135,6 @@ class segment(object):
         df1 = gpsbabel("../tests/test_data/segment_test_1a.gpx")[['Latitude', 'Longitude']]
         df2 = gpsbabel("../tests/test_data/segment_test_1b.gpx")[['Latitude', 'Longitude']]
 
-    a = distance.cdist(df1, df2, 'euclidean')
-    # b = a[a < .00001]
+        a = distance.cdist(df1, df2, 'euclidean')
+        # b = a[a < .00001]
 
