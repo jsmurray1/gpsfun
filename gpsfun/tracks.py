@@ -14,6 +14,37 @@ class track(object):
 
     def __init__(self, df):
         self.df = df
+        self.columns = df.columns
+        self.min_elevation = None
+        self.max_elevation = None
+        self.avg_elevation = None
+        self.ascent = None
+        self.descent = None
+        self.start_time = None
+        self.end_time = None
+        self.elapsed_time = None
+        self.activity_time = None
+        self.moving_time = None
+        self.total_distance = None
+        self.place_info = None
+        self.place_name = None
+
+
+
+    def _calc_moving_time(self, method="simple", min_movement=0.05):
+        """
+        simple: requires a minimum distance value and if the distance moved in 1 sec is less then this, it is not
+        counted as moving. The default os 0.05meters is .1 mph, this is assuming time between points is 1 second, which
+        might be wrong.
+        """
+        if method == "simple":
+            self.df["moving_time_between"] = self.df["time_between"]
+            if 'distance_between' in self.df.columns:
+                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
+            else:
+                self.distance()
+                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
+            return self.df["moving_time_between"].sum()
 
     def elevation(self):
         """
@@ -37,21 +68,6 @@ class track(object):
         else:
             return None
 
-    def _calc_moving_time(self, method="simple", min_movement=0.05):
-        """
-        simple: requires a minimum distance value and if the distance moved in 1 sec is less then this, it is not
-        counted as moving. The default os 0.05meters is .1 mph, this is assuming time between points is 1 second, which
-        might be wrong.
-        """
-        if method == "simple":
-            self.df["moving_time_between"] = self.df["time_between"]
-            if 'distance_between' in self.df.columns:
-                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
-            else:
-                self.distance()
-                self.df.loc[self.df["distance_between"] < min_movement, ["moving_time_between"]] = pd.Timedelta(0)
-            return self.df["moving_time_between"].sum()
-
     def time(self):
         """
         elapsed_duration: The time between the first and last record.
@@ -62,13 +78,13 @@ class track(object):
         self.start_time = self.df.iloc[0]["Date_Time"]
         self.end_time = self.df.iloc[-1]["Date_Time"]
         self.df["time_between"] = self.df["Date_Time"].diff()
-        self.elapsed_duration = self.end_time - self.start_time
+        self.elapsed_time = self.end_time - self.start_time
         self.activity_time = self.df["time_between"].sum()
         self.moving_time = self._calc_moving_time(method="simple", min_movement=0.05)
         return {
             "start_time": self.start_time,
             "end_time": self.end_time,
-            "elapsed_duration": self.elapsed_duration,
+            "elapsed_duration": self.elapsed_time,
             "activity_time": self.activity_time,
             "moving_time": self.moving_time,
         }
@@ -101,7 +117,7 @@ class track(object):
         r = requests.get('https://api.mapbox.com/geocoding/v5/mapbox.places/-105.2386,39.4667.json', params=params)
         self.place_info = r.json()
         self.place_name = self.place_info['features'][0]['place_name']
-        return r.json()
+        return {'place_info': r.json(), 'place_name': self.place_name}
 
     def export_lat_lon(self, file_type='JSON'):
         """
