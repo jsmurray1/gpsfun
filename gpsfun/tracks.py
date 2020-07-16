@@ -119,13 +119,13 @@ class track(object):
         self.place_name = self.place_info['features'][0]['place_name']
         return {'place_info': r.json(), 'place_name': self.place_name}
 
-    def export_lat_lon(self, file_type='JSON'):
+    def export_lat_lon_alt(self, file_type='JSON'):
         """
         export the latitude and longitude
         :return: file
         """
         if file_type == 'JSON':
-            return self.df[['Latitude', 'Longitude']].to_json(orient='table')
+            return self.df[['Latitude', 'Longitude', 'Altitude']].to_json(orient='table')
         elif file_type == 'csv':
             self.df[['Latitude', 'Longitude']].to_csv()
 
