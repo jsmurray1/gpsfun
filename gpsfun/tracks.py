@@ -90,7 +90,7 @@ class Track(object):
             "moving_time": self.moving_time,
         }
 
-    def distance(self, unit="mi"):
+    def distance(self):
         """
         :return:
         """
@@ -100,7 +100,7 @@ class Track(object):
         self.df["distance_between"] = self.df.apply(
             lambda x: sqrt(
                 (haversine((x["Latitude"], x["Longitude"]),
-                           (x["shift_Latitude"], x["shift_Longitude"]), unit=unit,)** 2
+                           (x["shift_Latitude"], x["shift_Longitude"]), unit="m",)** 2
                  + x["altitude_change"] ** 2)),axis=1)
         self.df.drop(['shift_Longitude', 'shift_Latitude'], axis=1)
         self.total_distance = self.df["distance_between"].sum()
