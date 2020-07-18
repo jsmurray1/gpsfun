@@ -3,9 +3,10 @@ import pandas as pd
 from haversine import haversine, Unit
 import requests
 from scipy.spatial import distance
-from readers import gpsbabel
+from .readers import gpsbabel
 
-class track(object):
+
+class Track(object):
     """
     Assumes WGS84 coordinate system
     Altitude:
@@ -89,7 +90,7 @@ class track(object):
             "moving_time": self.moving_time,
         }
 
-    def distance(self):
+    def distance(self, unit="mi"):
         """
         :return:
         """
@@ -99,7 +100,7 @@ class track(object):
         self.df["distance_between"] = self.df.apply(
             lambda x: sqrt(
                 (haversine((x["Latitude"], x["Longitude"]),
-                           (x["shift_Latitude"], x["shift_Longitude"]),unit="m",)** 2
+                           (x["shift_Latitude"], x["shift_Longitude"]), unit=unit,)** 2
                  + x["altitude_change"] ** 2)),axis=1)
         self.df.drop(['shift_Longitude', 'shift_Latitude'], axis=1)
         self.total_distance = self.df["distance_between"].sum()
@@ -129,7 +130,7 @@ class track(object):
         elif file_type == 'csv':
             self.df[['Latitude', 'Longitude']].to_csv()
 
-class segment(object):
+class Segment(object):
     """
     Work in progress
     """

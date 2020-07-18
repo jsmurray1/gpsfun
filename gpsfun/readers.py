@@ -5,7 +5,8 @@ import tempfile
 from pathlib import Path
 import xmltodict
 import fitdecode
-import col
+from . import col
+
 
 
 def _gpsbabel_proc(cmd, infile, outfile):
@@ -14,6 +15,23 @@ def _gpsbabel_proc(cmd, infile, outfile):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     stdout, stderr = process.communicate()
+    return stdout, stderr
+
+
+def _gpsbabel(file_path, file_ext=None):
+    file_cmd = {'.gpx': 'gpx', '.fit': 'garmin_fit', '.tcx': 'gtrnctr'}
+    file_ext = file_ext or Path(file_path).suffixes[-1].lower()
+    with tempfile.TemporaryDirectory() as temp_csv_path:
+        csv_file_path = os.path.join(temp_csv_path, 'gps_file.csv')
+        stdout, stderr = _gpsbabel_proc(file_cmd[file_ext], file_path, csv_file_path)
+        # TODO: check the errors here
+        try:
+            df = pd.read_csv(csv_file_path, parse_dates=[['Date', 'Time']])
+        except:
+            # TODO Need to check if there are dates
+            df = pd.read_csv(csv_file_path)
+    return df
+
 
 def gpsbabel(in_file, file_ext=None):
     """
@@ -24,33 +42,16 @@ def gpsbabel(in_file, file_ext=None):
     """
     file_cmd = {'.gpx': 'gpx', '.fit': 'garmin_fit', '.tcx': 'gtrnctr'}
     if isinstance(in_file, str): # If it is a str, assume this means it is a path
-        file_ext = file_ext or Path(in_file).suffixes[-1].lower()
-        with open(in_file, 'rb') as file_obj:
-            with tempfile.TemporaryDirectory() as temp_csv_path:
-                csv_file_path = os.path.join(temp_csv_path, 'gps_file.csv')
-                _gpsbabel_proc(file_cmd[file_ext], in_file, csv_file_path)
-                # TODO: check the errors here
-                try:
-                    df = pd.read_csv(csv_file_path, parse_dates=[['Date', 'Time']])
-                except:
-                    # TODO Need to check if there are dates
-                    df = pd.read_csv(csv_file_path)
+        df = _gpsbabel(in_file, file_ext=file_ext)
     else: # assume it is a file object type
         file_ext = file_ext or Path(in_file.name).suffixes[-1].lower()
-        with tempfile.NamedTemporaryFile(delete=False) as temp_gps:
+        with tempfile.NamedTemporaryFile(delete=True) as temp_gps:
             temp_gps.write(in_file.read())
             in_file.seek(0)
-            temp_gps.close()
-            with tempfile.TemporaryDirectory() as temp_csv_path:
-                csv_file_path = os.path.join(temp_csv_path, 'gps_file.csv')
-                _gpsbabel_proc(file_cmd[file_ext], temp_gps.name, csv_file_path)
-                # TODO: check the errors here
-                try:
-                    df = pd.read_csv(csv_file_path, parse_dates=[['Date', 'Time']])
-                except:
-                    # TODO Need to check if there are dates
-                    df = pd.read_csv(csv_file_path)
+            temp_gps.flush()
+            df = _gpsbabel(temp_gps.name, file_ext=file_ext)
     return df
+
 
 def tcx(tcxfile):
     '''
@@ -114,6 +115,7 @@ def gpx(gpxfile):
     df["Latitude"] = pd.to_numeric(df["Latitude"], downcast="float")
     df["Longitude"] = pd.to_numeric(df["Longitude"], downcast="float")
     return df
+
 
 def fit(file):
     """
