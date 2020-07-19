@@ -112,10 +112,11 @@ class Track(object):
         using mapbox, get place name, "where" the ride was.
         see
         https://docs.mapbox.com/api/search/#reverse-geocoding
-        :return:
+        r = requests.get('https://api.mapbox.com/geocoding/v5/mapbox.places/-105.2386,39.4667.json', params=params)
         """
         params = (('access_token', private_token), ('types', 'place'))
-        r = requests.get('https://api.mapbox.com/geocoding/v5/mapbox.places/-105.2386,39.4667.json', params=params)
+        Longitude, Latitude = self.df.iloc[0][['Longitude', 'Latitude']].values
+        r = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{Longitude},{Latitude}.json", params=params)
         self.place_info = r.json()
         self.place_name = self.place_info['features'][0]['place_name']
         return {'place_info': r.json(), 'place_name': self.place_name}
