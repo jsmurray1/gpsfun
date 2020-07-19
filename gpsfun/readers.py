@@ -7,6 +7,12 @@ import xmltodict
 import fitdecode
 from . import col
 
+class GPSFunException(Exception):
+    pass
+
+
+class GPSBabelException(GPSFunException):
+    pass
 
 
 def _gpsbabel_proc(cmd, infile, outfile):
@@ -24,6 +30,8 @@ def _gpsbabel(file_path, file_ext=None):
     with tempfile.TemporaryDirectory() as temp_csv_path:
         csv_file_path = os.path.join(temp_csv_path, 'gps_file.csv')
         stdout, stderr = _gpsbabel_proc(file_cmd[file_ext], file_path, csv_file_path)
+        if stderr:
+            raise GPSBabelException(stderr)
         # TODO: check the errors here
         try:
             df = pd.read_csv(csv_file_path, parse_dates=[['Date', 'Time']])
