@@ -116,10 +116,16 @@ class Track(object):
         """
         params = (('access_token', private_token), ('types', 'place'))
         Longitude, Latitude = self.df.iloc[0][['Longitude', 'Latitude']].values
-        r = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{Longitude},{Latitude}.json", params=params)
-        self.place_info = r.json()
-        self.place_name = self.place_info['features'][0]['place_name']
-        return {'place_info': r.json(), 'place_name': self.place_name}
+        try:
+            r = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{Longitude},{Latitude}.json", params=params)
+            self.place_info = r.json()
+            self.place_name = self.place_info['features'][0]['place_name']
+            return {'place_info': self.place_info, 'place_name': self.place_name}
+        except Exception as e:
+            # The Values should be none
+            # TODO Log error
+            return {'place_info': self.place_info, 'place_name': self.place_name}
+
 
     def export_lat_lon_alt(self, file_type='JSON'):
         """
