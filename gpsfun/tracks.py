@@ -113,6 +113,10 @@ class Track(object):
         see
         https://docs.mapbox.com/api/search/#reverse-geocoding
         r = requests.get('https://api.mapbox.com/geocoding/v5/mapbox.places/-105.2386,39.4667.json', params=params)
+
+        TODO Add a retry
+        https://findwork.dev/blog/advanced-usage-python-requests-timeouts-retries-hooks/
+        TODO Log errors
         """
         params = (('access_token', private_token), ('types', 'place'))
         Longitude, Latitude = self.df.iloc[0][['Longitude', 'Latitude']].values
@@ -122,9 +126,7 @@ class Track(object):
             self.place_name = self.place_info['features'][0]['place_name']
             return {'place_info': self.place_info, 'place_name': self.place_name}
         except Exception as e:
-            # The Values should be none
-            # TODO Log error
-            return {'place_info': self.place_info, 'place_name': self.place_name}
+            return {'place_info': self.place_info, 'place_name': self.place_name} # The Values should be none
 
 
     def export_lat_lon_alt(self, file_type='JSON'):
