@@ -5,7 +5,10 @@ import tempfile
 from pathlib import Path
 import xmltodict
 import fitdecode
-from . import col
+try:
+    from . import col
+except:
+    import col
 
 class GPSFunException(Exception):
     pass

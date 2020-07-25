@@ -2,8 +2,6 @@ from math import sqrt
 import pandas as pd
 from haversine import haversine, Unit
 import requests
-from scipy.spatial import distance
-from .readers import gpsbabel
 
 
 class Track(object):
@@ -138,29 +136,4 @@ class Track(object):
             return [dict(longitude=r.Longitude, latitude=r.Latitude, altitude=r.Altitude) for r in self.df.itertuples()]
         elif file_type == 'csv':
             self.df[['Latitude', 'Longitude']].to_csv()
-
-class Segment(object):
-    """
-    Work in progress
-    """
-    def point_to_line(self, lp1, lp2, p):
-        """
-        Does a perpendicular line from a point to a line intersect between two points.
-        TODO: Consider using shapely https://pypi.org/project/Shapely/
-        """
-        s1 = (lp2[1] - lp1[1])/(lp2[0] - lp1[0])
-        s2 = 1/s1
-        #y1 = s1(x − lp1[0]) + lp1[1]
-        #y2 = s2(x - p[0]) + p[1]
-        x = ((-s1 * lp1[0]) + lp1[1] + s2 * p[0] - p[1]) / (s2 - s1)
-        y = s1 * (x - lp1[0]) + lp1[1]
-        between = (lp2[0] < x < lp1[0]) or (lp2[0] > x > lp1[0]) and (lp2[1] < y < lp1[1]) or (lp2[1] > y > lp1[1])
-        distance = sqrt((p[0] - x)**2 + (p[1] - y)**2)
-
-    def point_to_point(self):
-        df1 = gpsbabel("../tests/test_data/segment_test_1a.gpx")[['Latitude', 'Longitude']]
-        df2 = gpsbabel("../tests/test_data/segment_test_1b.gpx")[['Latitude', 'Longitude']]
-
-        a = distance.cdist(df1, df2, 'euclidean')
-        # b = a[a < .00001]
 
