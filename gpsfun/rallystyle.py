@@ -27,16 +27,17 @@ class RallyResults(object):
         """
         Identify the activity point the represents the arrival at the checkpoint
         find near points that form acute triangles
-        :arg
         """
         self.df['to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
                                              self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
         self.df['checkpoint'] = np.nan
+        row_slice = 0
         for i, ck in enumerate(self.ck_points):
-            self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - ck, axis=1)
-            self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
-            self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[f'ck_to_B{i}'] ** 2 + self.epsilon
+            self.df[row_slice:][f'ck_to_A{i}'] = np.linalg.norm(self.df[row_slice:][['Latitude', 'Longitude']].values - ck, axis=1)
+            self.df[row_slice:][f'ck_to_B{i}'] = np.linalg.norm(self.df[row_slice:][['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
+            self.df[row_slice:]['acute'] = self.df[row_slice:][f'ck_to_A{i}'] ** 2 + self.df[row_slice:]['to_next'] ** 2 <= self.df[row_slice:][f'ck_to_B{i}'] ** 2 + self.epsilon
             self.df.loc[self.df[(self.df[f'ck_to_A{i}'] <= .0001) & (self.df.acute)].index[0], ['checkpoint']] = i
+            row_slice = self.df.index[self.df[(self.df[f'ck_to_A{i}'] <= .0001) & (self.df.acute)].index[0]]
             self.df['seg_time'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
 
         self.df['segment'] = self.df.checkpoint.fillna(method='ffill')
