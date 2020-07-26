@@ -54,13 +54,9 @@ class RallyResults(object):
             self.segments[i]['date_time'] = date_time
             if 'timed' in s['type'].keys():
                 total_stopwatch = total_stopwatch + stopwatch
-                print(total_stopwatch)
                 self.segments[i]['total_stopwatch'] = total_stopwatch
             else:
-                print(total_stopwatch)
                 self.segments[i]['total_stopwatch'] = total_stopwatch
-            # print(stopwatch)
-            # print(date_time)
 
         date_time = self.df.loc[self.df.checkpoint == (len(self.segments) - 1)]['Date_Time'].to_list()[0]
         self.segments[-1]['stopwatch'] = None
