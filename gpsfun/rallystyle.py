@@ -75,7 +75,7 @@ class RallyResults(object):
             date_time = self.df.loc[self.df.checkpoint == i]['Date_Time'].to_list()[0]
             self.segments[i]['duration'] = duration
             self.segments[i]['date_time'] = date_time
-            if 'timed' in s['type'].keys():
+            if s['type_name'] == 'timed':
                 total_timed = total_timed + duration
                 self.segments[i]['total_timed'] = total_timed
             else:
