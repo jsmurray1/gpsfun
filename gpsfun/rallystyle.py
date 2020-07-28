@@ -4,7 +4,29 @@ from datetime import timedelta
 class RallyResults(object):
     """
     segments is the rally definition
-    dataframe
+    type_name: STRING "timed", "Transport"
+    type_args: DICT, time_limit in sec for transport
+    total_timed_types: DICT [gravel, uphill, road, ...]
+    Segment stucture:
+  [{
+    'segment_name':'Event Start',
+    'location': {'lat': 39.737912, 'lon': -105.523881},
+    'type_name': 'transport',
+    'type_args': {'time_limit': 1800}
+    total_timed_types: {'uphill':None(0), 'gravel': None}
+  },]
+
+  result structure:
+  [{
+    'segment_name': 'Event Start',
+    'location': {'lat': 39.737912, 'lon': -105.523881},
+    'type_name': 'transport',
+    'type_args': {'time_limit': 1800}
+    'duration': Timedelta('0 days 00:24:21'),
+    'datetime': Timestamp('2012-07-21 09:18:13'),
+    'total_timed': datetime.timedelta(0),
+    total_timed_types: {'uphill':Timedelta(123), 'gravel': Timedelta(321)}
+  },]
     """
     def __init__(self, df, segments):
         self.df = df
