@@ -61,13 +61,9 @@ class RallyResults(object):
             self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
             self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
                 f'ck_to_B{i}'] ** 2 + self.epsilon
-            try:
-                self.df.loc[
-                    self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
-                                        (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
-            except:
-                print(f'Row slice: {row_slice}')
-                print(self.df[['to_next', 'acute', f'ck_to_A{i}']][self.df[f'ck_to_A{i}'] <= self.near])
+            self.df.loc[
+                self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
+                                    (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
             row_slice = int(self.df[self.df.checkpoint == i].index[0])
             self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
 
