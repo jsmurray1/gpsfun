@@ -35,7 +35,7 @@ class RallyResults(object):
         self.init_columns = df.columns
         self.segments = segments
         self.epsilon = 0.00001  # used to for finding acute triangles
-        self.near = .0001
+        self.near = .0001 # how what is near
         self.results = {}
         # self.ck_points = pd.DataFrame([p['location'] for p in segments], columns=['Latitude', 'Longitude'])
         self.ck_points = [p['location'] for p in segments]
@@ -77,20 +77,27 @@ class RallyResults(object):
         """
         total_timed = timedelta(seconds=0)
         for i, s in enumerate(self.segments[:-1]):
+            r = s.copy()
             # print(i, s)
             duration = self.df.loc[self.df.checkpoint == i + 1]['seg_duration'].to_list()[0]
             date_time = self.df.loc[self.df.checkpoint == i]['Date_Time'].to_list()[0]
-            self.segments[i]['duration'] = duration
-            self.segments[i]['date_time'] = date_time
+            # self.segments[i]['duration'] = duration
+            r['duration'] = duration
+            # self.segments[i]['date_time'] = date_time
+            ['date_time'] = date_time
             if s['type_name'] == 'timed':
                 total_timed = total_timed + duration
-                self.segments[i]['total_timed'] = total_timed
+                # self.segments[i]['total_timed'] = total_timed
+                r['total_timed'] = total_timed
             else:
-                self.segments[i]['total_timed'] = total_timed
+                # self.segments[i]['total_timed'] = total_timed
+                r['total_timed'] = total_timed
+            self.results.append(r)
 
         date_time = self.df.loc[self.df.checkpoint == (len(self.segments) - 1)]['Date_Time'].to_list()[0]
-        self.segments[-1]['duration'] = None
-        self.segments[-1]['date_time'] = date_time
-        self.segments[-1]['total_timed'] = total_timed
+        self.results.append(self.segments[-1])
+        self.results[-1]['duration'] = None
+        self.results[-1]['date_time'] = date_time
+        self.results[-1]['total_timed'] = total_timed
 
-        return self.segments
+        return self.results
