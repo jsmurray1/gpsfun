@@ -1,13 +1,14 @@
 import numpy as np
 from datetime import timedelta
 
+
 class RallyResults(object):
     """
     segments is the rally definition
     type_name: STRING "timed", "Transport"
     type_args: DICT, time_limit in sec for transport
     total_timed_types: DICT [gravel, uphill, road, ...]
-    Segment stucture:
+    Segment structure:
   [{
     'segment_name':'Event Start',
     'location': {'lat': 39.737912, 'lon': -105.523881},
@@ -28,11 +29,12 @@ class RallyResults(object):
     total_timed_types: {'uphill':Timedelta(123), 'gravel': Timedelta(321)}
   },]
     """
+
     def __init__(self, df, segments):
         self.df = df
         self.init_columns = df.columns
         self.segments = segments
-        self.epsilon = 0.00001 # used to for finding acute triangles
+        self.epsilon = 0.00001  # used to for finding acute triangles
         self.near = .0001
         self.results = {}
         # self.ck_points = pd.DataFrame([p['location'] for p in segments], columns=['Latitude', 'Longitude'])
@@ -43,7 +45,7 @@ class RallyResults(object):
             self.df['shift_Latitude'] = self.df.shift(-1)['Latitude']
         if not 'dist_to_next' in self.df.columns:
             self.df['dist_to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
-                                     self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
+                                                     self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
 
     def match_checkpoints(self):
         """
@@ -51,19 +53,27 @@ class RallyResults(object):
         find near points that form acute triangles
         """
         self.df['to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
-                                             self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
+                                            self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
         self.df['checkpoint'] = np.nan
         row_slice = 0
         for i, ck in enumerate(self.ck_points):
-            self.df[row_slice:][f'ck_to_A{i}'] = np.linalg.norm(self.df[row_slice:][['Latitude', 'Longitude']].values - ck, axis=1)
-            self.df[row_slice:][f'ck_to_B{i}'] = np.linalg.norm(self.df[row_slice:][['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
-            self.df[row_slice:]['acute'] = self.df[row_slice:][f'ck_to_A{i}'] ** 2 + self.df[row_slice:]['to_next'] ** 2 <= self.df[row_slice:][f'ck_to_B{i}'] ** 2 + self.epsilon
-            self.df.loc[self.df[(self.df[f'ck_to_A{i}'] <= .0001) & (self.df.acute)].index[0], ['checkpoint']] = i
-            row_slice = self.df.index[self.df[(self.df[f'ck_to_A{i}'] <= .0001) & (self.df.acute)].index[0]]
+            self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - ck, axis=1)
+            self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
+            self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
+                f'ck_to_B{i}'] ** 2 + self.epsilon
+            try:
+                self.df.loc[
+                    self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
+                                        (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
+            except:
+                print(f'Row slice: {row_slice}')
+                print(self.df[['to_next', 'acute', f'ck_to_A{i}']][self.df[f'ck_to_A{i}'] <= self.near])
+            row_slice = int(self.df[self.df.checkpoint == i].index[0])
             self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
 
+        self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
         self.df['segment'] = self.df.checkpoint.fillna(method='ffill')
-        self.df['segment'][self.df.segment >= len(self.ck_points)-1] = np.nan
+        self.df['segment'][self.df.segment >= len(self.ck_points) - 1] = np.nan
 
     def calc_results(self):
         """
@@ -71,6 +81,7 @@ class RallyResults(object):
         """
         total_timed = timedelta(seconds=0)
         for i, s in enumerate(self.segments[:-1]):
+            # print(i, s)
             duration = self.df.loc[self.df.checkpoint == i + 1]['seg_duration'].to_list()[0]
             date_time = self.df.loc[self.df.checkpoint == i]['Date_Time'].to_list()[0]
             self.segments[i]['duration'] = duration
