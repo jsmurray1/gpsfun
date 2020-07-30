@@ -84,7 +84,7 @@ class RallyResults(object):
             # self.segments[i]['duration'] = duration
             r['duration'] = duration
             # self.segments[i]['date_time'] = date_time
-            ['date_time'] = date_time
+            r['date_time'] = date_time
             if s['type_name'] == 'timed':
                 total_timed = total_timed + duration
                 # self.segments[i]['total_timed'] = total_timed
