@@ -36,7 +36,7 @@ class RallyResults(object):
         self.segments = segments
         self.epsilon = 0.00001  # used to for finding acute triangles
         self.near = .0001 # how what is near
-        self.results = {}
+        self.results = []
         # self.ck_points = pd.DataFrame([p['location'] for p in segments], columns=['Latitude', 'Longitude'])
         self.ck_points = [p['location'] for p in segments]
         if not 'shift_Longitude' in self.df.columns:
@@ -57,8 +57,10 @@ class RallyResults(object):
         self.df['checkpoint'] = np.nan
         row_slice = 0
         for i, ck in enumerate(self.ck_points):
-            self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - ck, axis=1)
-            self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
+            point = (ck['lat'], ck['lon'])
+            self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - point, axis=1)
+            self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - point,
+                                                    axis=1)
             self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
                 f'ck_to_B{i}'] ** 2 + self.epsilon
             self.df.loc[
