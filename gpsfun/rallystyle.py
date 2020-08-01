@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import timedelta
-from exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
+from .exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
 
 
 class RallyResults(object):
