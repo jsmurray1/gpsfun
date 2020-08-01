@@ -32,7 +32,7 @@ class RallyResults(object):
     """
 
     def __init__(self, df, segments):
-        if {'location', 'Longitude', 'date_time'}.intersection(set(df.columns)) != {'location', 'Longitude', 'date_time'}:
+        if {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) != {'Latitude', 'Longitude', 'date_time'}:
             raise RallyStyleException(df)
         self.df = df
         self.init_columns = df.columns
