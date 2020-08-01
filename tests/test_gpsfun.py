@@ -7,7 +7,7 @@ import pytest
 import unittest
 from pathlib import Path
 from gpsfun.readers import tcx, gpx
-from gpsfun.tracks import track
+from gpsfun.tracks import Track
 
 p = Path(r'test_data').glob('*')
 files = [x for x in p if x.is_file()]
