@@ -6,17 +6,14 @@ from pathlib import Path
 import xmltodict
 import fitdecode
 try:
+    from .exceptions import GPSBabelException, GPSFunException
+except:
+    from exceptions import GPSBabelException, GPSFunException
+
+try:
     from . import col
 except:
     import col
-
-class GPSFunException(Exception):
-    pass
-
-
-class GPSBabelException(GPSFunException):
-    pass
-
 
 def _gpsbabel_proc(cmd, infile, outfile):
     process = subprocess.Popen(
