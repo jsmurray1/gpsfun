@@ -10,10 +10,7 @@ class GPSBabelException(GPSFunException):
 # RallyStyle
 ####
 class RallyStyleException(GPSFunException):
-    def __init__(self, df):
-        self.dfcolumns = df.columns
-        self.message = f"Dataframe must contains columns:\n{self.dfcolumns}"
-        super().__init__(self.message)
+    pass
 
 
 class RallyResultsException(RallyStyleException):
@@ -21,10 +18,7 @@ class RallyResultsException(RallyStyleException):
 
 
 class MatchCheckpointsException(RallyResultsException):
-    def __init__(self, df):
-        self.df = df
-        self.message = f"Dataframe comlumns:\n{self.df.columns}"
-        super().__init__(self.message)
+    pass
 
 
 class CalcResultsException(RallyResultsException):

@@ -33,7 +33,7 @@ class RallyResults(object):
 
     def __init__(self, df, segments):
         if {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) != {'Latitude', 'Longitude', 'Date_Time'}:
-            raise RallyStyleException(df)
+            raise RallyStyleException(f"Dataframe must contains columns: \n {df.columns}")
         self.df = df
         self.init_columns = df.columns
         self.segments = segments
@@ -61,8 +61,10 @@ class RallyResults(object):
         row_slice = 0
         for i, ck in enumerate(self.ck_points):
             try:
-                self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - ck, axis=1)
-                self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - ck, axis=1)
+                point = (ck['lat'], ck['lon'])
+                self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - point, axis=1)
+                self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - point,
+                                                        axis=1)
                 self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
                     f'ck_to_B{i}'] ** 2 + self.epsilon
                 self.df.loc[
@@ -71,7 +73,7 @@ class RallyResults(object):
                 row_slice = int(self.df[self.df.checkpoint == i].index[0])
                 self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
             except Exception as e:
-                raise MatchCheckpointsException(self.df)
+                raise MatchCheckpointsException(f"Dataframe columns:\n{self.df.columns}")
 
         self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
         self.df['segment'] = self.df.checkpoint.fillna(method='ffill')
