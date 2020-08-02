@@ -1,7 +1,8 @@
 
 txc_names = {"LatitudeDegrees": "Latitude",
              "LongitudeDegrees": "Longitude",
-             'AltitudeMeters':'Altitude'
+             'AltitudeMeters':'Altitude',
+             'Time': 'Date_Time'
              }
 tcx_heartate = {"Value": "HeartRate"}
 txc_extentions = {}
