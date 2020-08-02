@@ -92,6 +92,8 @@ class Track(object):
         """
         :return:
         """
+        if 'altitude_change' not in self.df.columns:
+            self.elevation()
         self.df["shift_Longitude"] = self.df.shift(1)["Longitude"]
         self.df["shift_Latitude"] = self.df.shift(1)["Latitude"]
         # This is the flat distance between points
