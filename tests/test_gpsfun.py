@@ -6,60 +6,54 @@
 import pytest
 import unittest
 from pathlib import Path
-from gpsfun.readers import tcx, gpx
+from gpsfun.readers import tcx, gpx, gpsbabel
 from gpsfun.tracks import Track
 
-p = Path(r'test_data').glob('*')
-files = [x for x in p if x.is_file()]
 
-def test_basic_txc():
-    assert(len(files)) > 0
+@pytest.fixture
+def files():
+    parent_dir = Path(__file__).parent
+    p = parent_dir.joinpath('test_data').glob('**/*')
+    return [x for x in p if x.is_file() and x.name[:5] == 'test_']
+
+
+def test_gpsbabel_basic(files):
     for f in files:
-        if f.suffix == '.tcx':
-            df = tcx(f)
-            assert 'Latitude' in df.columns
-            assert len(df) > 100
-def test_basic_gpx():
-    assert (len(files)) > 0
+        if f.suffix in ['.tcx', '.gpx', '.fit']:
+            df = gpsbabel(str(f))
+            assert {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) == {'Latitude', 'Longitude', 'Date_Time'}
+
+
+def test_gpx_tracks(files):
+    """
+    uses gpx not gpsbabel
+    """
+    assert len(files) > 0
     for f in files:
         if f.suffix == '.gpx':
-            df = gpx(f)
-            assert 'Latitude' in df.columns
-            assert len(df) > 100
-
-def test_gpx_tracks():
-    assert (len(files)) > 0
-    for f in files:
-        if f.suffix == '.gpx':
-            t = track(df=gpx(f))
+            t = Track(df=gpx(f))
             t.elevation()
             assert t.avg_elevation != 0
+            t.distance()
+            assert t.total_distance > 0
+            t.time()
+            assert t.start_time < t.end_time
 
-def test_tcx_tracks():
-    assert (len(files)) > 0
+
+def test_tcx_tracks(files):
+    '''
+    uses tcx not gpsbabel
+    '''
     for f in files:
         if f.suffix == '.tcx':
-            t = track(df=tcx(f))
+            t = Track(df=tcx(f))
             t.elevation()
             assert t.avg_elevation != 0
+            t.distance()
+            assert t.total_distance > 0
+            t.time()
+            assert t.start_time < t.end_time
 
 
 if __name__ == '__main__':
     unittest.main()
-
-# @pytest.fixture
-# def response():
-#     """Sample pytest fixture.
-#
-#     See more at: http://doc.pytest.org/en/latest/fixture.html
-#     """
-#     # import requests
-#     # return requests.get('https://github.com/audreyr/cookiecutter-pypackage')
-#     pass
-#
-#
-# def test_content(response):
-#     """Sample pytest test function with the pytest fixture as an argument."""
-#     # from bs4 import BeautifulSoup
-#     # assert 'GitHub' in BeautifulSoup(response.content).title.string
-#     pass
