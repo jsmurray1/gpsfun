@@ -10,6 +10,7 @@ txc_extentions = {}
 gpx_names = {'@lat': 'Latitude',
              '@lon': 'Longitude',
              'ele': 'Altitude',
+             'time': 'Date_Time'
              }
 gpx_extentions = {'ns3:TrackPointExtension.ns3:atemp': 'Temp',
                   'ns3:TrackPointExtension.ns3:hr': 'HeartRate',

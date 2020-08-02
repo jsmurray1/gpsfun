@@ -123,6 +123,7 @@ def gpx(gpxfile):
     df["Altitude"] = pd.to_numeric(df["Altitude"], downcast="float")
     df["Latitude"] = pd.to_numeric(df["Latitude"], downcast="float")
     df["Longitude"] = pd.to_numeric(df["Longitude"], downcast="float")
+    df["Date_Time"] = pd.to_datetime(df["Date_Time"])
     return df
 
 
