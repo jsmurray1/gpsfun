@@ -27,6 +27,7 @@ def test_gpsbabel_basic(all_files):
 
 def test_gpsbabel_compressed(all_files):
     files = [x for x in all_files if x.suffix in ['.gz', '.zip']]
+    print(files)
     for f in files:
         df = gpsbabel(str(f))
         assert {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) == \

@@ -28,8 +28,6 @@ class Track(object):
         self.place_info = None
         self.place_name = None
 
-
-
     def _calc_moving_time(self, method="simple", min_movement=0.05):
         """
         simple: requires a minimum distance value and if the distance moved in 1 sec is less then this, it is not
@@ -72,7 +70,6 @@ class Track(object):
         elapsed_duration: The time between the first and last record.
         activity_time: Total time between points, probably the same asn elapsed_duration
         moving time: there are different methods, now only a very simple method is used
-        :return:
         """
         self.start_time = self.df.iloc[0]["Date_Time"]
         self.end_time = self.df.iloc[-1]["Date_Time"]
@@ -90,7 +87,7 @@ class Track(object):
 
     def distance(self):
         """
-        :return:
+        :return: {'total_distance': self.total_distance}
         """
         if 'altitude_change' not in self.df.columns:
             self.elevation()

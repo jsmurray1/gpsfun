@@ -63,7 +63,7 @@ def gpsbabel(in_file, file_ext=None):
             with gzip.open(in_file, 'rb') as f_in:
                 file_ext2 = Path(in_file).suffixes[-2].lower()
                 df = handle_fileobject(f_in, file_ext2)
-        if file_ext == '.zip':
+        elif file_ext == '.zip':
             with ZipFile(in_file) as myz:
                 for name in myz.namelist():
                     if Path(name).suffixes[-1].lower() in ['.fit', '.gpx', '.tcx']:
