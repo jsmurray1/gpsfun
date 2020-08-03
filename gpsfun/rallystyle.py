@@ -1,6 +1,9 @@
 import numpy as np
 from datetime import timedelta
-from .exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
+try:
+    from .exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
+except:
+    from exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
 
 
 class RallyResults(object):
@@ -67,6 +70,8 @@ class RallyResults(object):
                                                         axis=1)
                 self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
                     f'ck_to_B{i}'] ** 2 + self.epsilon
+                if self.df[f'ck_to_A{i}'].min() > self.near * 10:
+                    raise MatchCheckpointsException(f"It appears you never made it close to checkpoint {self.segments['segment_name']}")
                 self.df.loc[
                     self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
                                         (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
