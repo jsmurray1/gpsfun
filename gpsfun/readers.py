@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import subprocess
+import gzip
+from zipfile import ZipFile
 import tempfile
 from pathlib import Path
 import xmltodict
@@ -24,9 +26,8 @@ def _gpsbabel_proc(cmd, infile, outfile):
     return stdout, stderr
 
 
-def _gpsbabel(file_path, file_ext=None):
+def _gpsbabel(file_path, file_ext):
     file_cmd = {'.gpx': 'gpx', '.fit': 'garmin_fit', '.tcx': 'gtrnctr'}
-    file_ext = file_ext or Path(file_path).suffixes[-1].lower()
     with tempfile.TemporaryDirectory() as temp_csv_path:
         csv_file_path = os.path.join(temp_csv_path, 'gps_file.csv')
         stdout, stderr = _gpsbabel_proc(file_cmd[file_ext], file_path, csv_file_path)
@@ -48,16 +49,32 @@ def gpsbabel(in_file, file_ext=None):
     gpsbabel -t -i gtrnctr -f {tcx_file} -o unicsv -F {csv_file}
     TODO Consider dealing with zip files of each
     """
-    file_cmd = {'.gpx': 'gpx', '.fit': 'garmin_fit', '.tcx': 'gtrnctr'}
-    if isinstance(in_file, str): # If it is a str, assume this means it is a path
-        df = _gpsbabel(in_file, file_ext=file_ext)
-    else: # assume it is a file object type
+    def handle_fileobject(in_file, file_ext):
         file_ext = file_ext or Path(in_file.name).suffixes[-1].lower()
         with tempfile.NamedTemporaryFile(delete=True) as temp_gps:
             temp_gps.write(in_file.read())
             in_file.seek(0)
             temp_gps.flush()
-            df = _gpsbabel(temp_gps.name, file_ext=file_ext)
+            return _gpsbabel(temp_gps.name, file_ext=file_ext)
+
+    if isinstance(in_file, str): # If it is a str, assume this means it is a path
+        file_ext = file_ext or Path(in_file).suffixes[-1].lower()
+        if file_ext == '.gz':
+            with gzip.open(in_file, 'rb') as f_in:
+                file_ext2 = Path(in_file).suffixes[-2].lower()
+                df = handle_fileobject(f_in, file_ext2)
+        if file_ext == '.zip':
+            with ZipFile(in_file) as myz:
+                for name in myz.namelist():
+                    if Path(in_file).suffixes[-1].lower() == ".zip":
+                        with myz.open(name) as zfile:
+                            file_ext2 = Path(name).suffixes[-1].lower()
+                            df = handle_fileobject(zfile, file_ext2)
+                        break
+        else:
+            df = _gpsbabel(in_file, file_ext=file_ext)
+    else: # assume it is a file object type
+            df = handle_fileobject(in_file, file_ext)
     return df
 
 

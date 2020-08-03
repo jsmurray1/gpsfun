@@ -25,6 +25,22 @@ def test_gpsbabel_basic(all_files):
             assert {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) == \
                    {'Latitude', 'Longitude', 'Date_Time'}, f"failing file: {str(f)}"
 
+def test_gpsbabel_compressed(all_files):
+    files = [x for x in all_files if x.suffix in ['.gz', '.zip']]
+    for f in files:
+        df = gpsbabel(str(f))
+        assert {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) == \
+               {'Latitude', 'Longitude', 'Date_Time'}, f"failing file: {str(f)}"
+
+def test_gpsbabel_stream(all_files):
+    files = [x for x in all_files if x.suffix in ['.tcx', '.gpx', '.fit']]
+    for f in files:
+        with open(f, 'rb') as f:
+            df = gpsbabel(f)
+            assert {'Latitude', 'Longitude', 'Date_Time'}.intersection(set(df.columns)) == \
+                   {'Latitude', 'Longitude', 'Date_Time'}, f"failing file: {str(f)}"
+
+
 
 def test_gpx_tracks(all_files):
     """
@@ -55,6 +71,8 @@ def test_tcx_tracks(all_files):
             assert t.total_distance > 0, f"failing file: {str(f)}"
             t.time()
             assert t.start_time < t.end_time, f"failing file: {str(f)}"
+
+
 @pytest.fixture
 def roubaix():
     return [{'Segment_name':'Ride Start: lap 1',
