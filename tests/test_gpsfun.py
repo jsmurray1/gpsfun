@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""Tests for `gpsfun` package."""
-#  from gpsfun import gpsfun
+"""Basic functional Tests for `gpsfun` package."""
 
 import pytest
 import unittest
