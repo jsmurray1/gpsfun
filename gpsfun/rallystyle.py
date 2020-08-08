@@ -52,12 +52,20 @@ class RallyResults(object):
         if not 'dist_to_next' in self.df.columns:
             self.df['dist_to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
                                                      self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
+    def check_bounds(self):
+        latmax = min([ck['lat'] for ck in self.ck_points]) >= self.df.Latitude.min()
+        lonmax = min([ck['lon'] for ck in self.ck_points]) >= self.df.Longitude.min()
+        latmin = max([ck['lat'] for ck in self.ck_points]) <= self.df.Latitude.max()
+        lonmin = max([ck['lon'] for ck in self.ck_points]) <= self.df.Longitude.max()
+        assert latmax and lonmax and latmin and lonmin, "This activity does not seem to be within the area of the event segments"
 
     def match_checkpoints(self):
         """
         Identify the activity point the represents the arrival at the checkpoint
         find near points that form acute triangles
         """
+        self.check_bounds()
+
         self.df['to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
                                             self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
         self.df['checkpoint'] = np.nan
