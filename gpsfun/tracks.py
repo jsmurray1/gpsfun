@@ -53,7 +53,7 @@ class Track(object):
             self.max_elevation = self.df["Altitude"].max()
             self.avg_elevation = self.df["Altitude"].mean()
             self.df["altitude_change"] = self.df["Altitude"].diff()  # differance between rows
-            self.ascent = self.df[self.df["altitude_change"] > 0][ "altitude_change"].sum()
+            self.ascent = self.df[self.df["altitude_change"] > 0]["altitude_change"].sum()
             self.descent = self.df[self.df["altitude_change"] < 0]["altitude_change"].sum()
             return {
                 "min_elevation": self.min_elevation,
@@ -77,13 +77,22 @@ class Track(object):
         self.elapsed_time = self.end_time - self.start_time
         self.activity_time = self.df["time_between"].sum()
         self.moving_time = self._calc_moving_time(method="simple", min_movement=0.05)
+        self.mean_gap = self.df["time_between"].mean()
+        self.median_gap = self.df["time_between"].median()
+        self.max_gap = self.df["time_between"].max()
+        self.min_gap = self.df["time_between"].min()
+
         return {
             "start_time": self.start_time,
             "end_time": self.end_time,
             "elapsed_duration": self.elapsed_time,
             "activity_time": self.activity_time,
             "moving_time": self.moving_time,
-        }
+            'mean_gap': self.mean_gap,
+            'median_gap': self.median_gap,
+            'max_gap': self.max_gap,
+            'min_gap': self.min_gap
+            }
 
     def distance(self):
         """
@@ -97,12 +106,21 @@ class Track(object):
         self.df["distance_between"] = self.df.apply(
             lambda x: sqrt(
                 (haversine((x["Latitude"], x["Longitude"]),
-                           (x["shift_Latitude"], x["shift_Longitude"]), unit="m",)** 2
-                 + x["altitude_change"] ** 2)),axis=1)
+                           (x["shift_Latitude"], x["shift_Longitude"]), unit="m",) ** 2
+                 + x["altitude_change"] ** 2)), axis=1)
         self.df.drop(['shift_Longitude', 'shift_Latitude'], axis=1)
         self.total_distance = self.df["distance_between"].sum()
         self.df['distance'] = self.df['distance_between'].cumsum()
-        return {'total_distance': self.total_distance}
+        self.mean_dist = self.df[self.df.distance_between > 0]["distance_between"].mean()
+        self.median_dist = float(self.df[self.df.distance_between > 0]["distance_between"].median())
+        self.max_dist = self.df["distance_between"].max()
+        self.min_dist = self.df[self.df.distance_between > 0]["distance_between"].min()
+        return {'total_distance': self.total_distance,
+                'mean_dist': self.mean_dist,
+                'median_dist': self.median_dist,
+                'max_dist': self.max_dist,
+                'min_dist': self.min_dist
+                }
 
     def place(self, private_token):
         """
@@ -116,14 +134,24 @@ class Track(object):
         TODO Log errors
         """
         params = (('access_token', private_token), ('types', 'place'))
-        Longitude, Latitude = self.df.iloc[0][['Longitude', 'Latitude']].values
+        longitude, latitude = self.df.iloc[0][['Longitude', 'Latitude']].values
         try:
-            r = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{Longitude},{Latitude}.json", params=params)
+            r = requests.get(f"https://api.mapbox.com/geocoding/v5/mapbox.places/{longitude},{latitude}.json", params=params)
             self.place_info = r.json()
             self.place_name = self.place_info['features'][0]['place_name']
             return {'place_info': self.place_info, 'place_name': self.place_name}
         except Exception as e:
-            return {'place_info': self.place_info, 'place_name': self.place_name} # The Values should be none
+            return {'place_info': self.place_info, 'place_name': self.place_name}  # The Values should be none
+
+    @property
+    def calculate(self):
+        """
+        Calculate everything
+        """
+        r = self.elevation()
+        r.update(self.distance())
+        r.update(self.time())
+        return r
 
 
     def export_lat_lon_alt(self, file_type='JSON'):
