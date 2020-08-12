@@ -119,3 +119,13 @@ class RallyResults(object):
         self.results[-1]['total_timed'] = total_timed
 
         return self.results
+
+    def export_lat_lon_alt(self, file_type='JSON'):
+        """
+        export the latitude and longitude
+        :return: file
+        """
+        if file_type == 'JSON':
+            return [dict(longitude=r.Longitude, latitude=r.Latitude, altitude=r.Altitude) for r in self.df.itertuples()]
+        elif file_type == 'csv':
+            self.df[['Latitude', 'Longitude']].to_csv('export.csv')
