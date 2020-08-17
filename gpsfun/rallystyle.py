@@ -41,7 +41,7 @@ class RallyResults(object):
         self.init_columns = df.columns
         self.segments = segments
         self.epsilon = 0.00001  # used to for finding acute triangles
-        self.near = .0001 # how what is near
+        self.near = .0002 # How near the point needs to be to the checkpoint.
         self.results = []
         # self.ck_points = pd.DataFrame([p['location'] for p in segments], columns=['Latitude', 'Longitude'])
         self.ck_points = [p['location'] for p in segments]
@@ -86,7 +86,7 @@ class RallyResults(object):
                 row_slice = int(self.df[self.df.checkpoint == i].index[0])
                 self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
             except Exception as e:
-                raise MatchCheckpointsException(f"Dataframe columns:\n{self.df.columns}")
+                raise MatchCheckpointsException(f"Fail on checkpoint:{i} location: {ck}\nDataframe columns:\n{self.df.columns}")
 
         self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
         self.df['segment'] = self.df.checkpoint.fillna(method='ffill')
