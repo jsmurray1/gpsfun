@@ -106,3 +106,4 @@ ENV/
 .idea
 tests/.DS_Store
 .DS_Store
+local_Notebooks

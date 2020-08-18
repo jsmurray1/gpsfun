@@ -18,7 +18,9 @@ gpsfun
      :target: https://pyup.io/repos/github/vincentdavis/gpsfun/
      :alt: Updates
 
-
+.. image:: https://colab.research.google.com/assets/colab-badge.svg
+    :target: https://colab.research.google.com/github/vincentdavis/gpsfun/blob/master/notebooks/Example%20-%20Convert%2C%20read%2C%20get%20basic%20stats.ipynb
+    :alt: Updates
 
 Read and analyse gps activity, bike, run, data
 
