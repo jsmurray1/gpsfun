@@ -99,7 +99,7 @@ def roubaix():
 def rally_files():
     parent_dir = Path(__file__).parent
     p = parent_dir.joinpath('test_data/rallystyle/roubaix').glob('**/*')
-    return [x for x in p if x.is_file()]
+    return [x for x in p if x.is_file() and x.suffix.lower() in ['gpx', 'fit', 'tcx']]
 
 def test_rallystyle_basic(rally_files, roubaix):
     for f in rally_files:
