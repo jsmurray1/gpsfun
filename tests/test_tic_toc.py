@@ -28,12 +28,5 @@ def test_tictok_1(watopia_waistband):
     activity.distance()
     rs = TicTocResults(df=activity.df, segments=watopia_waistband)
     rs.calc_results()
+    assert rs.results[1]['distance'] == 2358.3245572657142
 
-    # assert rs.results[0]['duration'] == timedelta(hours=1, minutes=2, seconds=2)
-    # assert rs.results[0]['total_timed'] == timedelta(0)
-    # assert rs.results[1]['duration'] == timedelta(hours=0, minutes=0, seconds=33)
-    # assert rs.results[1]['total_timed'] == timedelta(0)
-    # assert rs.results[2]['duration'].total_seconds() == timedelta(hours=0, minutes=50, seconds=9).total_seconds()
-    # assert rs.results[2]['total_timed'].total_seconds() == timedelta(hours=0, minutes=50, seconds=9).total_seconds()
-    # assert rs.results[-1]['total_timed'].total_seconds() == timedelta(days=0, minutes=50, seconds=9).total_seconds()
-    # assert rs.results[-1]['duration'] == None
