@@ -51,6 +51,7 @@ class RallyResults(object):
             self.df['shift_Longitude'] = self.df.shift(-1)['Longitude']
         if not 'shift_Latitude' in self.df.columns:
             self.df['shift_Latitude'] = self.df.shift(-1)['Latitude']
+        # TODO It looks like we need to use this below instead os "to_next"
         if not 'dist_to_next' in self.df.columns:
             self.df['dist_to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
                                                      self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
@@ -62,50 +63,33 @@ class RallyResults(object):
         lonmin = max([ck['lon'] for ck in self.ck_points]) <= self.df.Longitude.max()
         assert latmax and lonmax and latmin and lonmin, "This activity does not seem to be within the area of the event segments"
 
-    def select_near_points(self, check_point):
-        """
-        TODO: Work in progress
-        Selects points near the checkpoints:
-        These may be anywhere in the activity, but that seems ok.
-        """
-        df1['Date_Time'] = df1.Date_Time.astype(np.int64)
-        columns = ['Date_Time', 'Latitude', 'Longitude', 'Altitude']
-        start = 10
-        end = 11
-        rows = 7  # actualy get rows - 2
-        realend = (end - start) * 5 + start
-        for i in range(start, realend, rows):
-            curr_row = df1[columns].iloc[i]
-            next_row = df1[columns].iloc[i + 1]
-            new_df = pd.DataFrame(np.linspace(curr_row, next_row, rows), columns=columns)
-            df1 = pd.concat([df1[:i], new_df, df1[i + rows:]], ignore_index=True)
-
-        df1['Date_Time'] = df1.Date_Time.astype('datetime64[ns]')
-        print(df1[9:25].head(25))
-
-
-
+    # TODO Use checkpoints module
     def match_checkpoints(self):
         """
         Identify the activity point the represents the arrival at the checkpoint
         find near points that form acute triangles
         """
         self.check_bounds()
+        # the norm is the distance between two points.
         self.df['to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
                                             self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
-        self.df['checkpoint'] = np.nan
+        # self.df['checkpoint'] = np.nan
         row_slice = 0
         for i, ck in enumerate(self.ck_points):
             try:
                 point = (ck['lat'], ck['lon'])
+                # Calculate the distance from the chekpoint to all consecutive points in the data.
                 self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - point, axis=1)
                 self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - point,
                                                         axis=1)
-                self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
-                    f'ck_to_B{i}'] ** 2 + self.epsilon
                 if self.df[f'ck_to_A{i}'].min() > self.near * 10:
                     raise MatchCheckpointsException(
                         f"It appears you never made it close to checkpoint {self.segments['segment_name']}")
+                # Acute, For ck "i" if the angle between the lines ck:A and A:B acute. If so then ck is "between" A and B
+                # Epislon is the fudge factor
+                self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
+                    f'ck_to_B{i}'] ** 2 + self.epsilon
+
                 self.df.loc[
                     self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
                                         (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
