@@ -139,4 +139,4 @@ class RallyResults(object):
         if file_type == 'JSON':
             return [dict(longitude=r.Longitude, latitude=r.Latitude, altitude=r.Altitude) for r in self.df.itertuples()]
         elif file_type == 'csv':
-            self.df[['Latitude', 'Longitude']].to_csv('export.csv')
+            self.df[['Latitude', 'Longitude', 'Altitude']].to_csv('export.csv')

@@ -2,7 +2,10 @@ from datetime import timedelta
 import pandas as pd
 import numpy as np
 
-from exceptions import MatchCheckpointsException
+try:
+    from .exceptions import MatchCheckpointsException
+except:
+    from exceptions import MatchCheckpointsException
 
 
 def find_acute(df, i, segment, near, epsilon):

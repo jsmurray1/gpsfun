@@ -1,10 +1,13 @@
 import numpy as np
-from segments import match_checkpoints, calculate_segment_distance
 
 try:
     from .exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
 except:
     from exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
+try:
+    from .segments import match_checkpoints, calculate_segment_distance
+except:
+    from segments import match_checkpoints, calculate_segment_distance
 
 
 class TicTocResults(object):
@@ -64,3 +67,14 @@ class TicTocResults(object):
         """
         match_checkpoints(df=self.df, epsilon=self.epsilon, near=self.near, segments=self.segments)
         self.results = calculate_segment_distance(self.df, self.segments)
+        return self.results
+
+    def export_lat_lon_alt(self, file_type='JSON'):
+        """
+        export the latitude and longitude
+        :return: file
+        """
+        if file_type == 'JSON':
+            return [dict(longitude=r.Longitude, latitude=r.Latitude, altitude=r.Altitude) for r in self.df.itertuples()]
+        elif file_type == 'csv':
+            self.df[['Latitude', 'Longitude', 'Altitude']].to_csv('export.csv')
