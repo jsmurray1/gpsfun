@@ -3,3 +3,4 @@ haversine
 scipy
 fitdecode
 xmltodict
+requests

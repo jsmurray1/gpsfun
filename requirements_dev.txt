@@ -16,3 +16,4 @@ scipy
 fitdecode
 xmltodict
 coverage
+requests

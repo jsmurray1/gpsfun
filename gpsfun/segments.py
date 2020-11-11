@@ -37,8 +37,8 @@ def match_checkpoints(df, epsilon, near, segments):
             # assign segment number to first acute point near the point seg point)
             df.loc[
                 df[row_slice:][(df[row_slice:][f'ck_to_A{i}'] <= near) &
-                               (df[row_slice:].acute)].index[0], ['checkpoint', 'Segment_name']] = i, seg[
-                'Segment_name']
+                               (df[row_slice:].acute)].index[0], ['checkpoint', 'segment_name']] = i, seg[
+                'segment_name']
             # This removes the points we have past.
             row_slice = int(df[df.checkpoint == i].index[0])
             # df['seg_duration'] = df[df.checkpoint >= 0]['Date_Time'].diff()
@@ -76,9 +76,9 @@ def calculate_segment_distance(df, segments):
      """
     results = []
     for i, seg in enumerate(segments):
-        if seg['type_name'] == 'tictoc':
+        if seg['type_name'] == 'tic_toc':
             seg_start_time = df[df.checkpoint == i].Date_Time.values[0]
-            seg_end_time = seg_start_time + pd.Timedelta(minutes=seg['type_args']['tictoc'])
+            seg_end_time = seg_start_time + pd.Timedelta(seconds=seg['type_args']['timer'])
             seg_past_end = df[df.Date_Time >= seg_end_time].iloc[0]
             seg_before_end = df[df.Date_Time <= seg_end_time].iloc[-1]
             a = seg_before_end.distance
@@ -89,7 +89,7 @@ def calculate_segment_distance(df, segments):
             seg_finish = (b - a) * ((p - d) / (d - c)) + a
             seg_distance = seg_finish - df[df.checkpoint == i].distance.iloc[0]
             seg['distance'] = seg_distance
-            seg['duration'] = timedelta(minutes=seg['type_args']['tictoc'])
+            seg['duration'] = timedelta(seconds=seg['type_args']['timer'])
             seg['datetime'] = pd.to_datetime(seg_start_time)
             results.append(seg)
         else:

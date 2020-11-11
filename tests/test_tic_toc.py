@@ -10,15 +10,15 @@ from gpsfun.tic_toc import TicTocResults
 
 @pytest.fixture
 def watopia_waistband():
-    return [{'Segment_name':'Ride to start',
+    return [{'segment_name':'Ride to start',
             'location': {'lat': -11.63508, 'lon': 166.97511},
             'type_name': 'transport',
-            'type_args': {'timed': None},
+            'type_args': {'timer': None},
             },
-            {'Segment_name':'Ride Start',
+            {'segment_name':'Ride Start',
             'location': {'lat': -11.63518, 'lon': 166.97386},
-            'type_name': 'tictoc',
-            'type_args': {'tictoc': 5}
+            'type_name': 'tic_toc',
+            'type_args': {'timer': 300}
              },
             ]
 
