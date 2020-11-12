@@ -31,20 +31,26 @@ def match_checkpoints(df, epsilon, near, segments):
     find near points that form acute triangles
     """
     row_slice = 0
+    df['segment_name'] = np.nan
     for i, seg in enumerate(segments):
         try:
             find_acute(df, i, seg, near, epsilon)
             # assign segment number to first acute point near the point seg point)
             df.loc[
                 df[row_slice:][(df[row_slice:][f'ck_to_A{i}'] <= near) &
-                               (df[row_slice:].acute)].index[0], ['checkpoint', 'segment_name']] = i, seg[
-                'segment_name']
-            # This removes the points we have past.
+                               (df[row_slice:].acute)].index[0], ['checkpoint']] = i
+            df.loc[
+            df[row_slice:][(df[row_slice:][f'ck_to_A{i}'] <= near) &
+                           (df[row_slice:].acute)].index[0], ['segment_name']] = seg['segment_name']
+
+            # This sets the slice to look forward from for the next checkpoint.
             row_slice = int(df[df.checkpoint == i].index[0])
             # df['seg_duration'] = df[df.checkpoint >= 0]['Date_Time'].diff()
         except Exception as e:
+
             raise MatchCheckpointsException(
-                f"Fail on checkpoint:{i} location: {(seg['location']['lat'], seg['location']['lon'])}\nDataframe columns:\n{df.columns}")
+                f"Fail on checkpoint:{i} location: {(seg['location']['lat'], seg['location']['lon'])}\n"
+                f"Nearest Point dist: {df[f'ck_to_A{i}'].min()}\nDataframe columns:\n{df.columns}\nRaised error: {e}")
 
 
 def calculate_segment_times(df, segments):
@@ -61,18 +67,25 @@ def calculate_segment_times(df, segments):
 
 def calculate_segment_distance(df, segments):
     """
-    This is for fixed distance competeing for distance TicToc
+    This is for fixed distance competing for distance TicToc
     [{
-    'segment_name': 'Event Start',
-    'location': {'lat': 39.737912, 'lon': -105.523881},
-    'type_name': 'transport',
-    'type_args': {'time_limit': 1800}
-    'duration': Timedelta('0 days 00:24:21'),
-    'datetime': Timestamp('2012-07-21 09:18:13'),
-    'distance': 25677
-    'total_timed': datetime.timedelta(0),
-     total_timed_types: {'uphill':Timedelta(123), 'gravel': Timedelta(321)}
-     },]
+        'segment_name': 'Event Start',
+        'location': {'lat': 39.737912, 'lon': -105.523881},
+        'type_name': 'tictoc',
+        'type_args': {'timer': 600}
+        'duration': Timedelta('0 days 00:24:21'),
+        'distance': 123 # in meters
+        'speed': 25 # m/s
+        'altitude': {'climb': 123, 'decend': 321, 'change':10} #segment,
+        'altitude_totals': {'climb': 123, 'descend': 321, 'change':10} # for competitive segments (timed or tictoc)
+        'rider_metrics': {power: 123 watts, hr: 75, cadence: 85, weight:65kg, …},
+        'rider_metrics_totals': {power: 123 watts, hr: 75, cadence: 85, weight:65kg, …} # for competitive segments (timed or tictoc)
+        'datetime': Timestamp('2012-07-21 09:18:13'),
+        'total_timed': datetime.timedelta(0),
+        'total_timed_types: {'uphill':Timedelta(123), 'gravel': Timedelta(321)},
+        'total_distance: 123,
+        'total_distance_types: {'uphill':123, 'gravel': 234},
+    },]
      """
     results = []
     for i, seg in enumerate(segments):
@@ -81,6 +94,7 @@ def calculate_segment_distance(df, segments):
             seg_end_time = seg_start_time + pd.Timedelta(seconds=seg['type_args']['timer'])
             seg_past_end = df[df.Date_Time >= seg_end_time].iloc[0]
             seg_before_end = df[df.Date_Time <= seg_end_time].iloc[-1]
+            # we do a linear approximation of the actual finish distance.
             a = seg_before_end.distance
             b = seg_past_end.distance
             c = seg_before_end.Date_Time
@@ -96,6 +110,11 @@ def calculate_segment_distance(df, segments):
             results.append(seg)
     return results
 
+def segment_rider_metrics(df):
+    """
+    calculate
+    """
+    pass
 
 def select_near_points(self, check_point, df):
     """
