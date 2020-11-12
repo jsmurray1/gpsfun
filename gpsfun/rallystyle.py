@@ -1,5 +1,6 @@
 import numpy as np
 from datetime import timedelta
+from segments import match_checkpoints, calculate_segment_times
 
 try:
     from .exceptions import RallyStyleException, RallyResultsException, MatchCheckpointsException, CalcResultsException
@@ -63,50 +64,13 @@ class RallyResults(object):
         lonmin = max([ck['lon'] for ck in self.ck_points]) <= self.df.Longitude.max()
         assert latmax and lonmax and latmin and lonmin, "This activity does not seem to be within the area of the event segments"
 
-    # TODO Use checkpoints module
-    def match_checkpoints(self):
-        """
-        Identify the activity point the represents the arrival at the checkpoint
-        find near points that form acute triangles
-        """
-        self.check_bounds()
-        # the norm is the distance between two points.
-        self.df['to_next'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values -
-                                            self.df[['shift_Latitude', 'shift_Longitude']].values, axis=1)
-        # self.df['checkpoint'] = np.nan
-        row_slice = 0
-        for i, ck in enumerate(self.ck_points):
-            try:
-                point = (ck['lat'], ck['lon'])
-                # Calculate the distance from the chekpoint to all consecutive points in the data.
-                self.df[f'ck_to_A{i}'] = np.linalg.norm(self.df[['Latitude', 'Longitude']].values - point, axis=1)
-                self.df[f'ck_to_B{i}'] = np.linalg.norm(self.df[['shift_Latitude', 'shift_Longitude']].values - point,
-                                                        axis=1)
-                if self.df[f'ck_to_A{i}'].min() > self.near * 10:
-                    raise MatchCheckpointsException(
-                        f"It appears you never made it close to checkpoint {self.segments['segment_name']}")
-                # Acute, For ck "i" if the angle between the lines ck:A and A:B acute. If so then ck is "between" A and B
-                # Epislon is the fudge factor
-                self.df['acute'] = self.df[f'ck_to_A{i}'] ** 2 + self.df['to_next'] ** 2 <= self.df[
-                    f'ck_to_B{i}'] ** 2 + self.epsilon
-
-                self.df.loc[
-                    self.df[row_slice:][(self.df[row_slice:][f'ck_to_A{i}'] <= self.near) &
-                                        (self.df[row_slice:].acute)].index[0], ['checkpoint']] = i
-                row_slice = int(self.df[self.df.checkpoint == i].index[0])
-                self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
-            except Exception as e:
-                raise MatchCheckpointsException(
-                    f"Fail on checkpoint:{i} location: {ck}\nDataframe columns:\n{self.df.columns}")
-
-        self.df['seg_duration'] = self.df[self.df.checkpoint >= 0]['Date_Time'].diff()
-        self.df['segment'] = self.df.checkpoint.fillna(method='ffill')
-        self.df['segment'][self.df.segment >= len(self.ck_points) - 1] = np.nan
-
     def calc_results(self):
         """
         calculate and return results
         """
+        self.check_bounds()
+        match_checkpoints(df=self.df, epsilon=self.epsilon, near=self.near, segments=self.segments)
+        calculate_segment_times(self.df, self.segments)
         total_timed = timedelta(seconds=0)
         for i, s in enumerate(self.segments[:-1]):
             r = s.copy()
